@@ -179,11 +179,12 @@ class Mesh:
     ## Constructor
     #  @param nodes list of finite element nodes
     #  @param elems list of finite elements
-    def __init__ ( self, nodes, elems, belems, bnodes ):
+    def __init__ ( self, nodes, elems, belems, LSnodes, RSnodes ):
        self.__nodes = nodes
        self.__elems = elems
        self.__belems = belems
-       self.__bnodes = bnodes
+       self.__LSnodes = LSnodes
+       self.__RSnodes = RSnodes
               
     ## Get a node
     #  @param ID Node ID
@@ -216,11 +217,17 @@ class Mesh:
     def get_belems( self ):
         return self.__belems
 
-    def get_bnodes( self ):
-        bnodelist = []
-        for i in self.__bnodes:
-            bnodelist.append(self.get_node(i))
-        return bnodelist
+    def get_LSnodes( self ):
+        LSnodelist = []
+        for i in self.__LSnodes:
+            LSnodelist.append(self.get_node(i))
+        return LSnodelist
+        
+    def get_RSnodes( self ):
+        RSnodelist = []
+        for i in self.__RSnodes:
+            RSnodelist.append(self.get_node(i))
+        return RSnodelist
 
     ## Get the number of nodes
     def get_nr_of_nodes ( self ):
@@ -235,8 +242,12 @@ class Mesh:
         return len(self.__belems)
         
     ## Get the number of boundary nodes
-    def get_nr_of_bnodes ( self ):
-        return len(self.__bnodes)
+    def get_nr_of_LSnodes ( self ):
+        return len(self.__LSnodes)
+        
+    ## Get the number of boundary nodes
+    def get_nr_of_RSnodes ( self ):
+        return len(self.__RSnodes)
 
     def get_nr_of_constraints( self ):
         total = 0
