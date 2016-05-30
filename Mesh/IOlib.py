@@ -87,7 +87,7 @@ def read_from_txt( fname ):
         LSnodes = list(set(LSnodes)) # Remove duplicates, contains node IDs with an arbitrary order
         RSnodes = list(set(RSnodes))
         
-        nodes[nodeIDs.index(1)].setconstraint = numpy.array([0, 0]) # Fix node 1 at (0,0).
+        nodes[nodeIDs.index(0)].setconstraint = numpy.array([1, 1]) # Fix node 1 at (0,0).
                 
         mesh = Mesh( nodes, elems, belems, LSnodes, RSnodes )
     
