@@ -74,7 +74,7 @@ def read_from_txt( fname ):
                 
             PhysicalGroup = int(linelist[3])    
             if PhysicalGroup == 2 : # Left edge
-                Cons = numpy.array([0, 1])
+                Cons = numpy.array([1, 0])
                 for node in enodes:
                     node.set_constraint(Cons)
                     LSnodes.append( node.get_ID() )
