@@ -4,30 +4,10 @@ Created on Wed Mar 30 12:57:28 2016
 
 @author:
 """
-import numpy 
+import numpy
 from MeshDat import *
-from StressDat import *
-from DislocDat import *
 from LU_Mark import *
 from class_parameter import *
-
-
-# returns the externam forces on the nodes due to the stress caused by dislocations
-def getBoundryForce(F,mesh):
-
-    belems = mesh.get_belems()
-    for belem in belems:
-        nodes = belem.get_nodes()
-        length = abs(numpy.linalg.norm((nodes[0].get_coordinate()-nodes[0].get_coordinate())))
-
-        n = 1/length * numpy.array((nodes[0].get_coordinate()-nodes[0].get_coordinate()))
-        n[0:2]=[n[1],-n[0]]
-        sig = numpy.zeros((2,2)) #get stresses in boundry element
-        Fint = numpy.linalg.norm(sig.dot(n))
-
-        for node in belem:
-            F[2*node.get_ID():2*node.get_ID()+1]=Fint*length/2
-    return F
 
 
 def getF(mesh,Force):
@@ -43,11 +23,9 @@ def getF(mesh,Force):
          node_ID = numpy.zeros(len(element))
          count1 = 0
          for node in element:
-             node_ID[count1] = node.get_ID()
+             node_ID[count1] = node.get_index()
              count1 += 1
-
          count2 = 0
-
          xis, ws = element.get_integration_scheme( 'gauss', 1 )
          for xi, w in zip( xis, ws ):                    #get Ke for each element
              N = get_shapes(xi)
@@ -60,9 +38,12 @@ def getF(mesh,Force):
          count3 = 0
          for node in element:
 
-            F[2*node.get_ID()] += fe[2*count3]
-            F[2*node.get_ID()+1] += fe[2*count3+1]
+            F[2*node.get_index()] += fe[2*count3]
+            F[2*node.get_index()+1] += fe[2*count3+1]
             count3 += 1
+    for x in range(len(ff)):
+        F[2*x]=ff[x,0]
+        F[2*x+1]=ff[x,1]
     return F
 
 # rewrites the KU=F to retrieve a solvable system.
@@ -76,13 +57,14 @@ def solveSys(mesh,F,K):
     #temporary prescribed displacement, must be replaced with timestep * velocity
     for node in nodes:
         if node.get_constraint().sum()>0:
-            cons[c,0:]=[node.get_ID(), node.get_constraint()[0],node.get_constraint()[1]]
-            consDis[c,0:]=[node.get_ID(), 0.001*node.get_displacementcons()[0],0.001*node.get_displacementcons()[1]]
+            cons[c,0:]=[node.get_index(), node.get_constraint()[0],node.get_constraint()[1]]
+            consDis[c,0:]=[node.get_index(), 0,0]
             c+=1
 
     #limit F to f. The values at f where the position of u is prescribed or fixed are pulled out
     nnodes = mesh.get_nr_of_nodes()
     boundryLen=numpy.sum(cons[:,1:])
+
     Kn=numpy.zeros((2*nnodes-boundryLen,2*nnodes-boundryLen))
     f=numpy.zeros(2*nnodes-boundryLen)
     ci=0
@@ -93,9 +75,9 @@ def solveSys(mesh,F,K):
             ci+=1
 
 
-
     # remove the rows and columns where u is known (prescribed), put them in the righthand side
     ci=0
+    print cons
     for c in range(2*nnodes):
         row = numpy.where(cons[:,0] == c//2)[0]
         if row.size == 0 or cons[row,c.__mod__(2)+1] == 0:
@@ -128,7 +110,7 @@ def solveSys(mesh,F,K):
         if row.size == 0 or cons[row,c.__mod__(2)+1] == 0:
             u[c]=x[c-ci]
         if cons[row,c.__mod__(2)+1] == 1:
-            u[c]=consDis[row,c.__mod__(2)+1]
+#            u[c]=consDis[row,c.__mod__(2)+1]
             ci+=1
     return u
 
@@ -140,7 +122,6 @@ def getK(mesh,param):
                                      [0, 0, (1-2*param.nu)/2]])
     nnodes=mesh.get_nr_of_nodes()
     K = numpy.zeros( (2*nnodes,)*2 )
-
     for element in mesh:
         Ke = numpy.zeros( (2*len(element),)*2 )
         xis, ws = element.get_integration_scheme( 'gauss', 1 )
@@ -163,7 +144,7 @@ def getK(mesh,param):
             for nodej in element:
                 for i1 in [0,1]:
                     for i2 in [0,1]:
-                        K[2*nodei.get_ID()+i1,2*nodej.get_ID()+i2] += Ke[2*counti+i1,2*countj+i2]
+                        K[2*nodei.get_index() +i1,2*nodej.get_index()+i2] += Ke[2*counti+i1,2*countj+i2]
                 countj += 1
             counti += 1
     #symmetry check
@@ -179,13 +160,14 @@ def get_FEM_stresses(mesh,U,param):
                                      [param.nu, 1-param.nu, 0],
                                      [0, 0, (1-2*param.nu)/2]])
     siglist = numpy.zeros((mesh.get_nr_of_elements(),3))
+    elec=0
     for element in mesh:
         xis, ws = element.get_integration_scheme( 'gauss', 1 )
         sig = 0
         q=numpy.zeros((6,1))
         qi=0
         for node in element:
-            id=node.get_ID()
+            id=node.get_index()
             q[2*qi]=U[2*id]
             q[2*qi+1]=U[2*id+1]
             qi+=1
@@ -198,7 +180,8 @@ def get_FEM_stresses(mesh,U,param):
                 GradN2d[2,0+2*inode] = GradN[inode,1]
                 GradN2d[2,1+2*inode] = GradN[inode,0]
             sig += w* numpy.dot( numpy.dot( C , GradN2d),q)
-        siglist[element.get_ID(),:]=sig.T
+        siglist[elec,:]=sig.T
+        elec+=1
     return siglist
 
 def get_shapes ( xi ):

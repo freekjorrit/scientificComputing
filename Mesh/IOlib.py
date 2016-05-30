@@ -6,8 +6,8 @@ Created on Tue Apr 05 17:53:24 2016
 """
 
 import numpy 
+from MeshDat import *
 
-from MeshDat import * 
 
 ## Mesh file reader
 #
@@ -16,6 +16,7 @@ from MeshDat import *
 #  @return       Indices of constrained degrees of freedom
 def read_from_txt( fname ):
     try:
+
         #Open the file to read
         #fname = 'simple.msh'
         fin = open( fname )
@@ -87,10 +88,9 @@ def read_from_txt( fname ):
         LSnodes = list(set(LSnodes)) # Remove duplicates, contains node IDs with an arbitrary order
         RSnodes = list(set(RSnodes))
         
-        nodes[nodeIDs.index(0)].setconstraint = numpy.array([1, 1]) # Fix node 1 at (0,0).
-                
+
         mesh = Mesh( nodes, elems, belems, LSnodes, RSnodes )
-    
+        mesh.get_node(8).set_constraint(numpy.array([1 ,1]))
     except:
         fin.close()
 
