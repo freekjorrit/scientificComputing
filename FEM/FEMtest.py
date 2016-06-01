@@ -23,8 +23,8 @@ SPS_init_source=16e-6
 SPS_init_obstacle=8e-6
 parameter=Parameter(E, nu, b, L_e, B, tau_nuc, stdtau_nuc, L_nuc, t_nuc, tau_obs, SPS, SPS_init_source, SPS_init_obstacle)
 
-mesh = read_from_txt('../Mesh/simple.msh')
-Force = numpy.array([[5, 1e10, 0]])
+mesh = read_from_txt('../Mesh/simple_fine.msh')
+Force = numpy.array([[17, 1e10, 0]])
 #mesh.get_node(1).set_constraint(numpy.array([1, 1]))
 #mesh.get_node(4).set_constraint(numpy.array([1, 0]))
 #mesh.get_node(8).set_constraint(numpy.array([1, 0]))
@@ -35,5 +35,5 @@ sig=get_FEM_stresses(mesh,U,parameter)
 nodeslist=mesh.get_nodes()
 #for node in nodeslist:
 #    print node.get_constraint()
-for x in ([0,1,2,3,4,5,6,7, 8]):
+for x in ([0,1,2,3]):
     print U[2*x],'\t\t',U[2*x+1]
