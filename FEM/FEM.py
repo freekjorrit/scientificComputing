@@ -21,7 +21,7 @@ def Distribute_Force(mesh,Force):
         
         if c<2:
         
-            dis_force[c] = numpy.array([node.get_index(),f*2,0])
+            dis_force[c] = numpy.array([node.get_index(),f/2,0])
             
         else:
             
