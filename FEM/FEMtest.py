@@ -24,12 +24,14 @@ SPS_init_obstacle=8e-6
 parameter=Parameter(E, nu, b, L_e, B, tau_nuc, stdtau_nuc, L_nuc, t_nuc, tau_obs, SPS, SPS_init_source, SPS_init_obstacle)
 
 mesh = read_from_txt('../Mesh/simple_fine.msh')
-Force = numpy.array([[17, 1e10, 0]])
+Force = 1e10
+
+dis_force = Distribute_Force(mesh,Force)
 #mesh.get_node(1).set_constraint(numpy.array([1, 1]))
 #mesh.get_node(4).set_constraint(numpy.array([1, 0]))
 #mesh.get_node(8).set_constraint(numpy.array([1, 0]))
 K = getK(mesh,parameter)
-F = getF(mesh,Force)
+F = getF(mesh,dis_force)
 U = solveSys(mesh,F,K)
 sig=get_FEM_stresses(mesh,U,parameter)
 nodeslist=mesh.get_nodes()

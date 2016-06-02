@@ -10,6 +10,28 @@ from LU_Mark import *
 from class_parameter import *
 
 
+def Distribute_Force(mesh,Force):
+    
+    nnodes = len(mesh.get_RSnodes())
+    c = 0
+    f = Force / (nnodes-1)
+    dis_force = numpy.zeros((nnodes,3))
+    
+    for node in mesh.get_RSnodes():
+        
+        if c<2:
+        
+            dis_force[c] = numpy.array([node.get_index(),f/2,0])
+            
+        else:
+            
+            dis_force[c] = numpy.array([node.get_index(),f,0])
+        
+        c+=1
+        
+    return dis_force
+
+
 def getF(mesh,Force):
     nnodes=mesh.get_nr_of_nodes()
     ff = numpy.zeros( (nnodes,2) )
