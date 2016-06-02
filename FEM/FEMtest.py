@@ -3,6 +3,7 @@ import numpy
 from FEM  import *
 from IOlib import *
 from MeshDat import *
+from output import *
 
 # Parameters
 TSTEP=0.01;
@@ -39,3 +40,4 @@ nodeslist=mesh.get_nodes()
 #    print node.get_constraint()
 for x in ([0,1,2,3]):
     print U[2*x],'\t\t',U[2*x+1]
+plot_solution( mesh,'output', 'output',U,sig)
