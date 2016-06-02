@@ -38,19 +38,20 @@ def plot_solution( mesh,outfile, outfolder,U,sig):
         output.write(' '.join(map(str,elenodes)))
         output.write('\n')
 
-    # output Celltypes
+    # output Celltypes (every cell is a triangular element)
     output.write('\nCELL_TYPES '+str(nrElements)+'\n')
     for ele in mesh:
         output.write('5\n')
 
 
-    # Plot stresses
+    # Plot stresses in cells
     output.write('\nCELL_DATA '+str(nrElements)+' \nSCALARS stress FLOAT \nLOOKUP_TABLE default\n')
     for c in range(nrElements):
         #output.write(str(nodes_list[c].get_stress_n()))
         output.write(vonMises(sig[c,:]))
         output.write('\n')
 
+    #plot displacements in nodes
     output.write('\nPOINT_DATA '+str(nrNodes)+' \nSCALARS displacement FLOAT \nLOOKUP_TABLE default\n')
     for c in range(nrNodes):
         #output.write(str(nodes_list[c].get_stress_n()))
@@ -69,6 +70,7 @@ def create_folder(path):
         if not os.path.isdir(path):
             raise
 
+# Calculate Von Mises stress on elememts
 def vonMises(la):
     stress = numpy.sqrt((((la[0]-la[1])/2)**2)+la[2]**2)
     return str(stress)
