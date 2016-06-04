@@ -18,7 +18,7 @@ def read_from_txt( fname ):
     try:
 
         #Open the file to read
-        #fname = 'simple.msh'
+#fname = 'SingleHole_Circle.msh'
         fin = open( fname )
         
         # this skips the $Physical names section
@@ -26,12 +26,17 @@ def read_from_txt( fname ):
         line     = fin.readline()
         line     = fin.readline()
         line     = fin.readline()
+        
+        # Read the number of PhysicalEntities
+        linelist = line.strip().split()
+        assert linelist[0] =='$PhysicalNames'
         line     = fin.readline()
-        line     = fin.readline()
-        line     = fin.readline()
-        line     = fin.readline()
-        line     = fin.readline()
-        line     = fin.readline()
+        nPhysical = int(line)
+        for inode in range( nPhysical + 1 ):
+            line     = fin.readline()
+            
+        linelist = line.strip().split()
+        print linelist[0]
         
         #Read the number of nodes
         line     = fin.readline()
@@ -88,9 +93,9 @@ def read_from_txt( fname ):
         LSnodes = list(set(LSnodes)) # Remove duplicates, contains node IDs with an arbitrary order
         RSnodes = list(set(RSnodes))
         
-
+        
         mesh = Mesh( nodes, elems, belems, LSnodes, RSnodes )
-        mesh.get_node(1).set_constraint(numpy.array([1 ,1]))
+        mesh.get_node(36).set_constraint(numpy.array([1 ,1]))
     except:
         fin.close()
 
