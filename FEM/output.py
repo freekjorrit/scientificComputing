@@ -59,7 +59,7 @@ def plot_solution( mesh,outfile, outfolder,U,sig):
         output.write('\n')
 
     output.close()
-
+    print 'File written to '+outfolder+'/post_proc_'+str(outfile).zfill(3)+'.vtk'
 
 # Funtction to create Folder if it does not exist already
 import os

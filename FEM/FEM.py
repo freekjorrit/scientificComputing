@@ -6,7 +6,6 @@ Created on Wed Mar 30 12:57:28 2016
 """
 import numpy
 from MeshDat import *
-from LU_Mark import *
 from class_parameter import *
 
 
@@ -76,13 +75,12 @@ def solveSys(mesh,F,K):
     nodes = mesh.get_nodes()
     c=0
 
-    #temporary prescribed displacement, must be replaced with timestep * velocity
+    #read constraints
     for node in nodes:
         if node.get_constraint().sum()>0:
             cons[c,0:]=[node.get_index(), node.get_constraint()[0],node.get_constraint()[1]]
             consDis[c,0:]=[node.get_index(), 0,0]
             c+=1
-
     #limit F to f. The values at f where the position of u is prescribed or fixed are pulled out
     nnodes = mesh.get_nr_of_nodes()
     boundryLen=numpy.sum(cons[:,1:])
@@ -96,10 +94,8 @@ def solveSys(mesh,F,K):
             f[ci]=F[c]
             ci+=1
 
-
     # remove the rows and columns where u is known (prescribed), put them in the righthand side
     ci=0
-    print cons
     for c in range(2*nnodes):
         row = numpy.where(cons[:,0] == c//2)[0]
         if row.size == 0 or cons[row,c.__mod__(2)+1] == 0:
@@ -110,7 +106,7 @@ def solveSys(mesh,F,K):
                     Kn[ci,cci]=K[c,cc]
                     cci+=1
             ci+=1
-        if cons[row,c.__mod__(2)+1] == 1:
+        else:
             cci=0
             for cc in range (2*nnodes):
                 row2= numpy.where(cons[:,0] == cc//2)[0]
@@ -118,13 +114,9 @@ def solveSys(mesh,F,K):
                     f[cci]-=K[cc,c]*consDis[row,c.__mod__(2)+1]
                     cci+=1
 
-    #LU, solve and replace the known displacements
-
-    P, L, U = LU_Decomp(Kn)
-    y=numpy.linalg.solve(L,f)
-    x=numpy.linalg.solve(U,y)
+    #solve and replace the known displacements
     u=numpy.zeros(2*nnodes)
-
+    x=numpy.linalg.solve(Kn,f)
     # restore the full U, so add the prescribed displacements.
     ci=0
     for c in range(2*nnodes):
@@ -132,7 +124,7 @@ def solveSys(mesh,F,K):
         if row.size == 0 or cons[row,c.__mod__(2)+1] == 0:
             u[c]=x[c-ci]
         if cons[row,c.__mod__(2)+1] == 1:
-#            u[c]=consDis[row,c.__mod__(2)+1]
+            u[c]=consDis[row,c.__mod__(2)+1]
             ci+=1
     return u
 
@@ -170,9 +162,7 @@ def getK(mesh,param):
                 countj += 1
             counti += 1
     #symmetry check
-    if ((K.round(1) == K.round(1).T).all()):
-        print 'K is symmetric'
-    else:
+    if ((K.round(3) != K.round(3).T).all()):
         print 'K is unsymmetric'
     return K
 

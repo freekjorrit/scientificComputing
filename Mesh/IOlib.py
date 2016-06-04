@@ -90,7 +90,7 @@ def read_from_txt( fname ):
         
 
         mesh = Mesh( nodes, elems, belems, LSnodes, RSnodes )
-        mesh.get_node(36).set_constraint(numpy.array([1 ,1]))
+        mesh.get_node(1).set_constraint(numpy.array([1 ,1]))
     except:
         fin.close()
 
