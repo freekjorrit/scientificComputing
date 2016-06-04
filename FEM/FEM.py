@@ -17,7 +17,6 @@ def Distribute_Force(mesh,Force):
     dis_force = numpy.zeros((nnodes,3))
     
     for node in mesh.get_RSnodes():
-        
         if c<2:
         
             dis_force[c] = numpy.array([node.get_index(),f/2,0])
