@@ -1,3 +1,5 @@
 .idea/*
 *.pyc
 post_proc_output.vtk
+Doxyfile
+FEM/doc/*

@@ -15,9 +15,6 @@ Force = -1e10
 
 dis_force = Distribute_Force(mesh,Force)
 
-#mesh.get_node(1).set_constraint(numpy.array([1, 1]))
-#mesh.get_node(4).set_constraint(numpy.array([1, 0]))
-#mesh.get_node(8).set_constraint(numpy.array([1, 0]))
 K = getK(mesh,parameter)
 F = getF(mesh,dis_force)
 

@@ -1,19 +1,21 @@
-## @package post_proc
-#  This module contains the functions used for creating the VTK files
+## @package output
+#  This module contains the functions used for creating the output. The ouput is formatted in .VTK and can be opened with Paraview.
 
-## Create VTK file
-#
-#  @param mesh          Finite element mesh
-#  @param position      Solution vector
-#  @param outfile       number of the output file
 import numpy
-def plot_solution( mesh,outfile, outfolder,U,sig):
+import os
+## plot_solution.
+#  Plots the nodes, elements, stresses and displacements of the mesh
+#  @param mesh This is a MeshDat.Mesh()
+#  @param outfile Name of the outputfile
+#  @param outfolder Location of the outputfile
+#  @param U In U the displacements of the nodes are stated
+#  @sig In sig the stresses for all nodes are listed
 
+def plot_solution( mesh, outfile, outfolder,U,sig):
 
-    # Create output folder
     create_folder(outfolder)
 
-    #create or empty output file and print vtk headers
+    # Opening Tags
     output = open(outfolder+'/post_proc_'+str(outfile).zfill(3)+'.vtk','w+')
     output.write('# vtk DataFile Version 2.0 \nDiscrete Dislocations \nASCII \n\n')
 
@@ -61,8 +63,10 @@ def plot_solution( mesh,outfile, outfolder,U,sig):
     output.close()
     print 'File written to '+outfolder+'/post_proc_'+str(outfile).zfill(3)+'.vtk'
 
-# Funtction to create Folder if it does not exist already
-import os
+## create_folder
+#  Creates output Folder if it does not exist already
+# @param path defines the output path.
+
 def create_folder(path):
     try:
         os.makedirs(path)
@@ -70,7 +74,10 @@ def create_folder(path):
         if not os.path.isdir(path):
             raise
 
-# Calculate Von Mises stress on elememts
-def vonMises(la):
-    stress = numpy.sqrt((((la[0]-la[1])/2)**2)+la[2]**2)
+## vonMises
+#  Calculates the Von Mises stress on elements
+#  @param st Vector containing the stress elements
+
+def vonMises(st):
+    stress = numpy.sqrt((((st[0]-st[1])/2)**2)+st[2]**2)
     return str(stress)

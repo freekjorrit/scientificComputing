@@ -1,4 +1,7 @@
 # -*- coding: utf-8 -*-
+## @package meshdat
+#  This file contains all objects
+
 """
 Created on Wed Apr 06 17:44:14 2016
 
@@ -20,8 +23,8 @@ def addBelement( belist, ID, Benodes ):
     NewBelement = Element(ID, StandardTruss(), Benodes)
     return belist.append( NewBelement )
        
-#==============================================================================
-    
+#==============================================================================#
+## node object
 class Node:
     
     ## Constructor
@@ -33,6 +36,7 @@ class Node:
         self.__index = index
         self.set_coordinate( coord )
         self.set_constraint( numpy.array([0 , 0]) )
+
     ## Get the Node ID
     def get_ID ( self ):
         return self.__ID
@@ -61,6 +65,7 @@ class Node:
         return s
     
     ## Set Constraint
+    # @param cons Set constraint for node
     def set_constraint( self, cons ):
         assert isinstance( cons, numpy.ndarray )
         assert cons.ndim==1
@@ -71,19 +76,20 @@ class Node:
     def get_constraint( self ):
         return self.__cons
 
-    ## Set Constraint
+    ## Set Force Constraint
+    # @param consF set Force constraints
     def set_forcecons( self, consF ):
         assert isinstance( consF, numpy.ndarray )
         assert consF.ndim==1
         assert consF.dtype==float
         self.__conF = consF
 
-    ## Get Constraint
+    ## Get ForceConstraint
     def get_forcecons( self ):
         return self.__conF
 
 #==============================================================================
-
+## element object
 class Element:
 
     ## Constructor
@@ -263,7 +269,7 @@ class Mesh:
         return total
 #==============================================================================
     
-#  Linear triangle parent element with local coordinates (0,0), (1,0), (0,1)         
+##  Linear triangle parent element with local coordinates (0,0), (1,0), (0,1)
 class StandardTriangle:
     
     ## Dictionary of integration schemes
@@ -315,7 +321,7 @@ class StandardTriangle:
 
 #==============================================================================
     
-#  Linear truss parent element with local coordinates (-1,0), (1,0)         
+##  Linear truss parent element with local coordinates (-1,0), (1,0)
 class StandardTruss:
     
     ## Dictionary of integration schemes
