@@ -79,5 +79,6 @@ def create_folder(path):
 #  @param st Vector containing the stress elements
 
 def vonMises(st):
-    stress = numpy.sqrt((((st[0]-st[1])/2)**2)+st[2]**2)
+    #stress = (1/0.70710678118)*numpy.sqrt((st[0]-st[1])**2+(st[1])**2+(st[0])**2+6*st[2])
+    stress = st[0]
     return str(stress)
