@@ -7,7 +7,7 @@ Created on Wed Mar 30 12:57:28 2016
 import numpy
 from MeshDat import *
 from class_parameter import *
-import scipy
+import scipy.sparse.linalg
 import time
 
 
