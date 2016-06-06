@@ -9,7 +9,7 @@ E=70e9
 nu=0.33
 parameter=Parameter(E, nu)
 
-mesh = read_from_txt('../Mesh/SingleHole_Circle.msh')
+mesh = read_from_txt('../Mesh/simple_fine_3x.msh')
 
 Force = -1e10
 
