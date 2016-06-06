@@ -11,7 +11,7 @@ parameter=Parameter(E, nu)
 
 mesh = read_from_txt('../Mesh/SingleHole_Circle.msh')
 
-Force = 1e10
+Force = -1e10
 
 dis_force = Distribute_Force(mesh,Force)
 

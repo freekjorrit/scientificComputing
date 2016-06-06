@@ -36,7 +36,6 @@ def read_from_txt( fname ):
             line     = fin.readline()
             
         linelist = line.strip().split()
-        print linelist[0]
         
         #Read the number of nodes
         line     = fin.readline()
