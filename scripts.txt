@@ -1,0 +1,12 @@
+IOlib
+
+The IOlib file is used to read a .msh file. The .msh file consists of a list of arrays, and IOlib translates these arrays to node ID's, node coordinates and elements.
+
+MeshDat
+
+The MeshDat file contains all the data structures that are used for the FEM simulation. It allows nodes and elements to be added and combines these to create a mesh. It also supports different types of elements. 
+
+FEM
+
+The FEM file contains all functions that are necessary to perform the FEM simulation. The function Distribute_Force is used to distribute the input force over the edge of the plate. The function getF is used to create force vector F in the system of equations. GetK creates the stiffness matrix. Using solveSys the system of equiations is solved to get the displacement in all the nodes and finally get_FEM_stresses is used to translate these displacements to stresses. 
+

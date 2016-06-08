@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+## @package IOlib
+#  This file is used to read the mesh from a .msh file.
 """
 Created on Tue Apr 05 17:53:24 2016
 
@@ -13,7 +15,6 @@ from MeshDat import *
 #
 #  @param  fname Name of the mesh file
 #  @return       Finite element mesh
-#  @return       Indices of constrained degrees of freedom
 def read_from_txt( fname ):
     try:
 
