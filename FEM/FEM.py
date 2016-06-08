@@ -1,17 +1,17 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Wed Mar 30 12:57:28 2016
+## @package FEM
+#  This module contains the functions used for the FEM.
 
-@author:
-"""
 import numpy
 from MeshDat import *
 from class_parameter import *
 import scipy.sparse.linalg
 import time
 
-
-
+## Distribute the Force over the nodes on the righthand side
+#
+#  @param  mesh This is a MeshDat.Mesh()
+#  @param  Force Force on the nodes on the righthand side
+#  @return       Distributed force on nodes
 def Distribute_Force(mesh,Force):
     
     nnodes = len(mesh.get_RSnodes())
@@ -32,7 +32,11 @@ def Distribute_Force(mesh,Force):
         
     return dis_force
 
-
+## Limit F to f where the entries of K in KU=F are known
+#
+#  @param  mesh This is a MeshDat.Mesh()
+#  @param  Force Distributed force on nodes
+#  @return       Limited F
 def getF(mesh,Force):
     nnodes=mesh.get_nr_of_nodes()
     ff = numpy.zeros( (nnodes,2) )
@@ -69,7 +73,12 @@ def getF(mesh,Force):
         F[2*x+1]=ff[x,1]
     return F
 
-# rewrites the KU=F to retrieve a solvable system.
+## Rewrite K to Kn (rows with known U are removed) and solve the linear system
+#
+#  @param  mesh This is a MeshDat.Mesh()
+#  @param  F Limited Force Distribution
+#  @param  K Stiffness Matrix
+#  @return Displacement U
 def solveSys(mesh,F,K):
     nr_of_nodes_w_cons = mesh.get_nr_of_nodes_with_constraints()
     cons = numpy.zeros((nr_of_nodes_w_cons,3))
@@ -141,7 +150,11 @@ def solveSys(mesh,F,K):
     return u
 
 
-# Assamble K from the separate Ke parts
+## Make stiffness matrix K from all separate Ke from the elements
+#
+#  @param  mesh This is a MeshDat.Mesh()
+#  @param  param This is a class_parameter.Parameter()
+#  @return Stifness K
 def getK(mesh,param):
     C = param.E/((1+param.nu)*(1-2*param.nu))*numpy.array([[1-param.nu, param.nu, 0],
                                      [param.nu, 1-param.nu, 0],
@@ -178,7 +191,14 @@ def getK(mesh,param):
         print 'K is unsymmetric'
     return K
 
-#returns a array of stresses in all elements in [xx yy xy]
+
+
+## returns a array of stresses in all elements in [xx yy xy]
+#
+#  @param  mesh This is a MeshDat.Mesh()
+#  @param  U Displacement of nodes
+#  @param  param This is a class_parameter.Parameter()
+#  @return Stiffness K
 def get_FEM_stresses(mesh,U,param):
     C = param.E/((1+param.nu)*(1-2*param.nu))*numpy.array([[1-param.nu, param.nu, 0],
                                      [param.nu, 1-param.nu, 0],

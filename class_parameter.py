@@ -1,3 +1,7 @@
+## @class parameter
+#  This file contains all material parameters
+
+## Parameter object
 class Parameter:
 
     ## Constructor
