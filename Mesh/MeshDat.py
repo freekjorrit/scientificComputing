@@ -185,6 +185,9 @@ class Mesh:
     ## Constructor
     #  @param nodes list of finite element nodes
     #  @param elems list of finite elements
+    #  @param belems list of boundary elements
+    #  @param LSnodes list of boundary nodes on left side of geometry
+    #  @param RSnodes list of boundary nodes on right side of geometry
     def __init__ ( self, nodes, elems, belems, LSnodes, RSnodes ):
        self.__nodes = nodes
        self.__elems = elems
@@ -314,6 +317,7 @@ class StandardTriangle:
         xis, ws = self.__ischemes[ (name,npts) ]
         return xis, ws
 
+    ## Get the element's internal connection scheme
     def get_connections_scheme (self):
         return numpy.array([[ 0 , 1 ],
                            [ 1 , 2 ],
@@ -365,5 +369,6 @@ class StandardTruss:
         xis, ws = self.__ischemes[ (name,npts) ]
         return xis, ws
 
+    ## Get the element's internal connection scheme
     def get_connections_scheme (self):
         return numpy.array([[ 0 , 1 ]])
