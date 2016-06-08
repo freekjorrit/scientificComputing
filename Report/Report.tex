@@ -1,0 +1,41 @@
+\documentclass[11pt,a4paper,twoside]{report}
+\usepackage[margin=1in]{geometry} % Margins on the side
+
+% OFTEN NEEDED:
+\usepackage[english]{babel}
+\usepackage[none]{hyphenat} % No word breaking
+\usepackage{float} 			% Place figures with [H]
+\usepackage{graphicx} 		% Figure compatibility
+%\graphicspath{{../Pics/}}   % Set default figure location
+\usepackage{mathtools}      % Symbols
+\usepackage[toc,page]{appendix} % Appendices
+\usepackage{color} 			% For \textcolor{red}{...}
+\usepackage[parfill]{parskip}% No annoying indents
+\usepackage{subfigure}
+
+% Set chapter header placement
+\usepackage{titlesec}
+\titleformat{\chapter}[display]
+  {\normalfont\huge\bfseries\filcenter}{\chaptertitlename\ \thechapter}{20pt}{\Huge}
+\titlespacing*{\chapter}
+  {0pt}{-30pt}{20pt}% SECOND TERM: PLACEMENT HEIGHT
+  
+% Set up scientific notation
+\providecommand{\e}[1]{\ensuremath{\times 10^{#1}}}
+% USE: 3.2\e{-10} m
+
+
+\begin{document}
+
+\input{Chapters/__titlepage}
+
+\tableofcontents
+\newpage
+
+\input{Chapters/Introduction} 	% Introduction is leeg
+\pagenumbering{arabic}
+\newpage
+
+\input{Chapters/Appendix}		 
+
+\end{document}
