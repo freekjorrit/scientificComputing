@@ -1,3 +1,6 @@
+## @package
+#  This file is used to read the mesh from a .msh file.
+
 import numpy
 from FEM  import *
 from IOlib import *

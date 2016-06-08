@@ -1,4 +1,4 @@
-## @class parameter
+## @package parameter
 #  This file contains all material parameters
 
 ## Parameter object

@@ -5,7 +5,6 @@ import numpy
 from MeshDat import *
 from class_parameter import *
 import scipy.sparse.linalg
-import time
 
 ## Distribute the Force over the nodes on the righthand side
 #
@@ -127,17 +126,11 @@ def solveSys(mesh,F,K):
 
     #solve and replace the known displacements
     u=numpy.zeros(2*nnodes)
-    tic1 = time.time()
-    x=numpy.linalg.solve(Kn,f)
-    toc1 = time.time()
-    print toc1-tic1
-    
-    tic2 = time.time()
+
     sKn = scipy.sparse.csr_matrix(Kn)    
     
     sx = scipy.sparse.linalg.spsolve(sKn,f)
-    toc2 = time.time()
-    print toc2-tic2
+
     # restore the full U, so add the prescribed displacements.
     ci=0
     for c in range(2*nnodes):
