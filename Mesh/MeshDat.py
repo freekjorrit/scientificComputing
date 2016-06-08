@@ -10,11 +10,19 @@ Created on Wed Apr 06 17:44:14 2016
 
 import numpy 
 
+## Add nodes to a list before creating the mesh.
+#  @param nlist  List of nodes
+#  @param ID     Node ID
+#  @param coord  Node coordinate
 def addNode( nlist, ID, coord ):
     index = len(nlist)
     NewNode = Node(ID, coord, index)
     return nlist.append( NewNode )
-    
+
+## Add elements to a list before creating the mesh.
+#  @param elist  List of elements
+#  @param ID     Element ID
+#  @param Enodes Element nodes
 def addElement( elist, ID, Enodes ):
     NewElement = Element(ID, StandardTriangle(), Enodes)
     return elist.append( NewElement )
@@ -212,18 +220,22 @@ class Mesh:
         s += 'Number of elements: %d\n' % len(self)
         return s
         
+    ## Get the list of nodes in the mesh
     def get_nodes( self ):
         return self.__nodes
         
+    ## Get the list of elements in the mesh
     def get_elems( self ):
         return self.__elems
 
+    ## Get the list of nodes on the left boundary of the mesh
     def get_LSnodes( self ):
         LSnodelist = []
         for i in self.__LSnodes:
             LSnodelist.append(self.get_node(i))
         return LSnodelist
         
+    ## Get the list of nodes on the right boundary of the mesh
     def get_RSnodes( self ):
         RSnodelist = []
         for i in self.__RSnodes:
@@ -246,12 +258,14 @@ class Mesh:
     def get_nr_of_RSnodes ( self ):
         return len(self.__RSnodes)
 
+    ## Get the number of constrains
     def get_nr_of_constraints( self ):
         total = 0
         for node in self.__nodes:
             total += node.get_constraint().sum();
         return total
 
+    ## Get the number of constrained nodes
     def get_nr_of_nodes_with_constraints( self ):
         total = 0
         for node in self.__nodes:
