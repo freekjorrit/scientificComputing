@@ -18,10 +18,7 @@ def addNode( nlist, ID, coord ):
 def addElement( elist, ID, Enodes ):
     NewElement = Element(ID, StandardTriangle(), Enodes)
     return elist.append( NewElement )
-    
-def addBelement( belist, ID, Benodes ):
-    NewBelement = Element(ID, StandardTruss(), Benodes)
-    return belist.append( NewBelement )
+
        
 #==============================================================================#
 ## node object
@@ -185,13 +182,11 @@ class Mesh:
     ## Constructor
     #  @param nodes list of finite element nodes
     #  @param elems list of finite elements
-    #  @param belems list of boundary elements
     #  @param LSnodes list of boundary nodes on left side of geometry
     #  @param RSnodes list of boundary nodes on right side of geometry
-    def __init__ ( self, nodes, elems, belems, LSnodes, RSnodes ):
+    def __init__ ( self, nodes, elems, LSnodes, RSnodes ):
        self.__nodes = nodes
        self.__elems = elems
-       self.__belems = belems
        self.__LSnodes = LSnodes
        self.__RSnodes = RSnodes
               
@@ -223,9 +218,6 @@ class Mesh:
     def get_elems( self ):
         return self.__elems
 
-    def get_belems( self ):
-        return self.__belems
-
     def get_LSnodes( self ):
         LSnodelist = []
         for i in self.__LSnodes:
@@ -245,10 +237,6 @@ class Mesh:
     ## Get the number of elements
     def get_nr_of_elements ( self ):
         return len(self.__elems)
-        
-    ## Get the number of boundary elements
-    def get_nr_of_belements ( self ):
-        return len(self.__belems)
         
     ## Get the number of boundary nodes
     def get_nr_of_LSnodes ( self ):
@@ -323,52 +311,3 @@ class StandardTriangle:
                            [ 1 , 2 ],
                            [ 2 , 0 ]])
 
-#==============================================================================
-    
-##  Linear truss parent element with local coordinates (-1,0), (1,0)
-class StandardTruss:
-    
-    ## Dictionary of integration schemes
-    #
-    #  See e.g. 'http://www.cs.rpi.edu/~flaherje/pdf/fea6.pdf' for details
-    __ischemes = {
-                   ('gauss',1 ) : ( numpy.array([0.5]),
-                                    numpy.array([1]) )
-                 }
-
-    ## Number of nodes
-    __nnodes = 2
-
-    ## Length function
-    def __len__ ( self ):
-        return self.get_nr_of_nodes()
-
-    ## Get the number of nodes
-    def get_nr_of_nodes ( self ):
-        return self.__nnodes
-
-    ## Get the shape functions
-    #  @param  xi Local coordinate vector
-    #  @return    Vector of shape functions
-    def get_shapes ( self, xi ):
-        return numpy.array([1-xi[0],xi[0]])
-
-    ## Get the shape functions gradient
-    #  @param  xi Local coordinate vector
-    #  @return    Matrix of shape function gradients
-    def get_shapes_gradient ( self, xi ):
-        return numpy.array([[-1.],
-                            [ 1.],])
-
-    ## Get the integration scheme
-    #  @param  name The type of integration scheme (e.g. 'gauss')
-    #  @param  npts The number of integration points
-    #  @return      Matrix of integration point coordinates
-    #  @return      Vector of integration point weights
-    def get_integration_scheme ( self, name, npts ):
-        xis, ws = self.__ischemes[ (name,npts) ]
-        return xis, ws
-
-    ## Get the element's internal connection scheme
-    def get_connections_scheme (self):
-        return numpy.array([[ 0 , 1 ]])

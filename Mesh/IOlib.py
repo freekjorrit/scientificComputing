@@ -64,7 +64,6 @@ def read_from_txt( fname ):
         nelems   = int(line)
         
         elems = []  
-        belems = []
         LSnodes = []
         RSnodes = []
         for ielem in range( nelems ):
@@ -73,9 +72,7 @@ def read_from_txt( fname ):
             enodesIDs = numpy.array(linelist[5:],dtype=int)
             enodes    = [ nodes[nodeIDs.index(enodesID)] for enodesID in enodesIDs ]
             ElementType = int(linelist[1])
-            if ElementType == 1 :
-                addBelement(belems, elemID, enodes)
-            elif ElementType == 2 :
+            if ElementType == 2 :
                 addElement(elems, elemID, enodes)
                 
             PhysicalGroup = int(linelist[3])    
@@ -94,7 +91,7 @@ def read_from_txt( fname ):
         RSnodes = list(set(RSnodes))
         
         
-        mesh = Mesh( nodes, elems, belems, LSnodes, RSnodes )
+        mesh = Mesh( nodes, elems, LSnodes, RSnodes )
         mesh.get_node(1).set_constraint(numpy.array([1 ,1]))
     except:
         fin.close()
