@@ -12,6 +12,6 @@ First, the force has to be distributed over the edge of the mesh. This is done u
 \subsection{Solving the system}
 The system is solved using the function solveSys. This function first removes the parts with a prescribed displacement (constraint) from the left hand side and moves them to the right hand side. This modified stiffness matrix is now made into a sparse matrix to decrease the solving time. After this system is solved, the vector U of the displacements is reassembled and returned. 
 \subsection{Stresses}
-Finally the stresses in each element are calculated using the displacements of the nodes. This is done using the function get\textunderscore FEM\textunderscore stresses. This function uses single point Gaussian quadrature.
+Finally the stresses in each element are calculated using the displacements of the nodes. This is done using the function get\_FEM\_stresses. This function uses single point Gaussian quadrature.
 
 
