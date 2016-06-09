@@ -1,3 +1,8 @@
 \chapter{Validation}
 
 \section{Analytical solution}
+To test the FEM solution analytically, a plate of length 1 m and height 1 m is loaded in the x direction with a force of 100 kN. This is a thin plate and therefore plane stress can be assumed.
+In plane stress the following relation holds:
+\[\sigma=\varepsilon*E\]
+The value of the Young's modulus is 70 GPa. The stress is calculated by dividing the force by the length of the side of the plate. From this a strain of \(1.4286*10^{-6}\) can be found. 
+In the FEM the left side of the plate is constrained in the x direction and the force is applied to the right side. The displacement of the right side of the plate due to this force is also \(1.4286*10^{-6}\), exactly the same as the analytical solution. 
