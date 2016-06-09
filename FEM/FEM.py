@@ -149,26 +149,26 @@ def solveSys(mesh,F,K):
 #  @param  param This is a class_parameter.Parameter()
 #  @return Stifness K
 def getK(mesh,param):
-    C = param.E/((1+param.nu)*(1-2*param.nu))*numpy.array([[1-param.nu, param.nu, 0],
-                                     [param.nu, 1-param.nu, 0],
-                                     [0, 0, (1-2*param.nu)/2]])
+    C = param.E/((1-param.nu**2))*numpy.array([[1, param.nu, 0],
+                                     [param.nu, 1, 0],
+                                     [0, 0, (1-param.nu)/2]])
     nnodes=mesh.get_nr_of_nodes()
     K = numpy.zeros( (2*nnodes,)*2 )
     for element in mesh:
         Ke = numpy.zeros( (2*len(element),)*2 )
-        xis, ws = element.get_integration_scheme( 'gauss', 1 )
+        xi, w = element.get_integration_scheme( 'gauss', 1 )
 
         #create Ke with the weight functions
-        for xi, w in zip( xis, ws ):
-            GradN = element.get_shapes_gradient( xi )
 
-            GradN2d = numpy.zeros((3,2*len(element)))
-            for inode in range(0,len(element)):
-                GradN2d[0,0+2*inode] = GradN[inode,0]
-                GradN2d[1,1+2*inode] = GradN[inode,1]
-                GradN2d[2,0+2*inode] = GradN[inode,1]
-                GradN2d[2,1+2*inode] = GradN[inode,0]
-            Ke +=  w * numpy.dot( numpy.dot( GradN2d.T, C ),GradN2d)
+        GradN = element.get_shapes_gradient( xi )
+
+        GradN2d = numpy.zeros((3,2*len(element)))
+        for inode in range(0,len(element)):
+            GradN2d[0,0+2*inode] = GradN[inode,0]
+            GradN2d[1,1+2*inode] = GradN[inode,1]
+            GradN2d[2,0+2*inode] = GradN[inode,1]
+            GradN2d[2,1+2*inode] = GradN[inode,0]
+        Ke =  w * numpy.dot( numpy.dot( GradN2d.T, C ),GradN2d)
         counti = 0
         ## put the values of Ke in K at the node positions
         for nodei in element:
@@ -193,13 +193,13 @@ def getK(mesh,param):
 #  @param  param This is a class_parameter.Parameter()
 #  @return Stiffness K
 def get_FEM_stresses(mesh,U,param):
-    C = param.E/((1+param.nu)*(1-2*param.nu))*numpy.array([[1-param.nu, param.nu, 0],
-                                     [param.nu, 1-param.nu, 0],
-                                     [0, 0, (1-2*param.nu)/2]])
+    C = param.E/((1-param.nu**2))*numpy.array([[1, param.nu, 0],
+                                     [param.nu, 1, 0],
+                                     [0, 0, (1-param.nu)/2]])
     siglist = numpy.zeros((mesh.get_nr_of_elements(),3))
     elec=0
     for element in mesh:
-        xis, ws = element.get_integration_scheme( 'gauss', 1 )
+        xi, w = element.get_integration_scheme( 'gauss', 1 )
         sig = 0
         q=numpy.zeros((6,1))
         qi=0
@@ -208,15 +208,15 @@ def get_FEM_stresses(mesh,U,param):
             q[2*qi]=U[2*id]
             q[2*qi+1]=U[2*id+1]
             qi+=1
-        for xi, w in zip( xis, ws ):
-            GradN = element.get_shapes_gradient( xi )
-            GradN2d = numpy.zeros((3,2*len(element)))
-            for inode in range(0,len(element)):
-                GradN2d[0,0+2*inode] = GradN[inode,0]
-                GradN2d[1,1+2*inode] = GradN[inode,1]
-                GradN2d[2,0+2*inode] = GradN[inode,1]
-                GradN2d[2,1+2*inode] = GradN[inode,0]
-            sig += w* numpy.dot( numpy.dot( C , GradN2d),q)
+
+        GradN = element.get_shapes_gradient( xi )
+        GradN2d = numpy.zeros((3,2*len(element)))
+        for inode in range(0,len(element)):
+            GradN2d[0,0+2*inode] = GradN[inode,0]
+            GradN2d[1,1+2*inode] = GradN[inode,1]
+            GradN2d[2,0+2*inode] = GradN[inode,1]
+            GradN2d[2,1+2*inode] = GradN[inode,0]
+        sig = w * numpy.dot( numpy.dot( C , GradN2d),q)
         siglist[elec,:]=sig.T
         elec+=1
     return siglist

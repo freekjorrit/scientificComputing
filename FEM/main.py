@@ -1,5 +1,5 @@
-## @package
-#  This file is used to read the mesh from a .msh file.
+## @package main
+#  This file is used to run the script and call al functions
 
 import numpy
 from FEM  import *
@@ -10,11 +10,12 @@ from output import *
 
 E=70e9
 nu=0.33
+
 parameter=Parameter(E, nu)
 
-mesh = read_from_txt('../Mesh/simple_fine_3x.msh')
+mesh = read_from_txt('../Mesh/MultiHole.msh')
 
-Force = -1e10
+Force = 1e5
 
 dis_force = Distribute_Force(mesh,Force)
 

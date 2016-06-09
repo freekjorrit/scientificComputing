@@ -47,17 +47,37 @@ def plot_solution( mesh, outfile, outfolder,U,sig):
 
 
     # Plot stresses in cells
-    output.write('\nCELL_DATA '+str(nrElements)+' \nSCALARS stress FLOAT \nLOOKUP_TABLE default\n')
+    output.write('\nCELL_DATA '+str(nrElements)+' \nSCALARS x-stress FLOAT \nLOOKUP_TABLE default\n')
+    for c in range(nrElements):
+        #output.write(str(nodes_list[c].get_stress_n()))
+        output.write(str(sig[c,0]))
+        output.write('\n')
+
+    output.write(' \nSCALARS y-stress FLOAT \nLOOKUP_TABLE default\n')
+    for c in range(nrElements):
+        #output.write(str(nodes_list[c].get_stress_n()))
+        output.write(str(sig[c,1]))
+        output.write('\n')
+
+    output.write(' \nSCALARS Mises-stress FLOAT \nLOOKUP_TABLE default\n')
     for c in range(nrElements):
         #output.write(str(nodes_list[c].get_stress_n()))
         output.write(vonMises(sig[c,:]))
         output.write('\n')
 
     #plot displacements in nodes
-    output.write('\nPOINT_DATA '+str(nrNodes)+' \nSCALARS displacement FLOAT \nLOOKUP_TABLE default\n')
+    output.write('\nPOINT_DATA '+str(nrNodes)+' \nSCALARS x-displacement FLOAT \nLOOKUP_TABLE default\n')
+
     for c in range(nrNodes):
         #output.write(str(nodes_list[c].get_stress_n()))
-        output.write(str(numpy.linalg.norm(numpy.array([U[2*c], U[2*c+1]]))))
+        output.write(str(U[2*c]))
+        output.write('\n')
+
+    output.write(' \nSCALARS y-displacement FLOAT \nLOOKUP_TABLE default\n')
+
+    for c in range(nrNodes):
+        #output.write(str(nodes_list[c].get_stress_n()))
+        output.write(str(U[2*c+1]))
         output.write('\n')
 
     output.close()
@@ -79,6 +99,5 @@ def create_folder(path):
 #  @param st Vector containing the stress elements
 
 def vonMises(st):
-    #stress = (1/0.70710678118)*numpy.sqrt((st[0]-st[1])**2+(st[1])**2+(st[0])**2+6*st[2])
-    stress = st[0]
+    stress = (1/0.70710678118)*numpy.sqrt((st[0]-st[1])**2+(st[1])**2+(st[0])**2+6*st[2])
     return str(stress)

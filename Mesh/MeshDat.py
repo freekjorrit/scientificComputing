@@ -282,7 +282,7 @@ class StandardTriangle:
     #  See e.g. 'http://www.cs.rpi.edu/~flaherje/pdf/fea6.pdf' for details
     __ischemes = {
                    ('gauss',1 ) : ( numpy.array([[1./3.,1./3.]]),
-                                    numpy.array([1./2.]) )
+                                    numpy.array([.5]) )
                  }
 
     ## Number of nodes
