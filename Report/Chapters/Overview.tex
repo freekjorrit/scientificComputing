@@ -8,9 +8,26 @@ The mesh that is used for this FEM analysis is made using Gmsh. Gmsh creates a .
 \subsection{Other input}
 In main.py it is possible to adjust the material properties (Young's modulus and Poisson's ratio). The .msh file has to be specified here, as is the force that will be exerted on the boundary. 
 \subsection{Creating the system of equations}
-First, the force has to be distributed over the edge of the mesh. This is done using the function Distribute\textunderscore Force. Now the vector F can be made using the function getF. Subsequently stiffness matrix K can be constructed using the function getK. 
-\subsection{Solving the system}
-The system is solved using the function solveSys. This function first removes the parts with a prescribed displacement (constraint) from the left hand side and moves them to the right hand side. This modified stiffness matrix is now made into a sparse matrix to decrease the solving time. After this system is solved, the vector U of the displacements is reassembled and returned. 
-\subsection{Stresses}
-Finally the stresses in each element are calculated using the displacements of the nodes. This is done using the function get\_FEM\_stresses. This function uses single point Gaussian quadrature.
+First, the force has to be distributed over the edge of the mesh. This is done using the function Distribute\textunderscore Force. Now the vector $F$ can be made using the function getF. Subsequently stiffness matrix $\mathbf{K}$ can be constructed using the function getK. 
 
+The matrix $\mathbf{K}$ is build from multiple $\mathbf{K_e}$. For every element a $\mathbf{K_e}$ is made and added to $\mathbf{K}$ at the places according to the node index. $\mathbf{K_e}$ is calculated as follows:
+\begin{equation}
+\mathbf{K_e} = \int_\Omega \mathbf{B}^T \mathbf{C} \mathbf{B} \ d\omega
+\end{equation}
+With $\Omega$ the area of the element, $\mathbf{B}$ the strain operator and $\mathbf{C}$ the elastic stiffness matrix.  When $\mathbf{K}$ is known the system $\mathbf{K} u = F$ is ready.
+\subsection{Solving the system}
+The system is solved using the function solveSys. The solving algorithm is created in a way the system can be solved for prescribed displacements or forces. When displacements are known, or constraints, the equation $\mathbf{K} u = F$, where the objective is to fin $u$, has some redundancy. The rows and columns of $\mathbf{K}$ where the element of $u$ is known can be moved to the right hand side  of the equation. The according element in $F$ is also removed.
+This modified stiffness matrix is now made into a sparse matrix to decrease the solving time. After this system is solved, the vector $u$ of the displacements is reassembled and returned. 
+
+\subsection{Stresses}
+Finally the stresses in each element are calculated using the displacements of the nodes. This is done using the function get\_FEM\_stresses. This function uses single point Gaussian quadrature. 
+\begin{equation}
+\underline{\sigma_e}=\begin{bmatrix}
+\sigma_{xx}\\
+\sigma_{yy}\\
+\sigma_{xy}
+\end{bmatrix}=\mathbf{C} \mathbf{B} q_e
+\end{equation}
+Where $q_e$ are the displacements of the nodes in an element and $\underline{\sigma_e}$ contains the separate stress factors of an element.
+\subsection{Output}
+The result are formatted in .VTK format and can be opened with Paraview. In the output the nodes and elements are included with their new coordinates. Also the displacement, in both $x$ and $y$ direction, and the stress, also in $x$ and $y$ direction and the VonMises stress are included. 
