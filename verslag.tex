@@ -1,0 +1,46 @@
+\documentclass[11pt]{article}
+
+\usepackage{a4wide}
+\usepackage{graphicx}
+\usepackage{color}
+\usepackage{colortbl}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{changepage}
+\usepackage{boxedminipage}
+\usepackage[normalem]{ulem}
+
+%opening
+\title{FEM analysis: Hole in a plate}
+\author{Freek Ramp, Mark Schapendonk, Rob Arnold Bik}
+
+\begin{document}
+
+\maketitle
+
+\begin{boxedminipage}{\textwidth}
+\tableofcontents
+\end{boxedminipage}
+
+\pagebreak
+
+\section{The program}
+
+\subsection{Mesh}
+The mesh that is used for this FEM analysis is made using Gmsh. Gmsh creates a .msh file. The .msh file consists of a list of nodes with their coordinates, and a list of elements with their nodes. The file IOlib.py is used to convert these lists to our data structures. This file also constrains the left side of the mesh. 
+\subsection{Other input}
+In main.py it is possible to adjust the material properties (Young's modulus and Poisson's ratio). The .msh file has to be specified here, as is the force that will be exerted on the boundary. 
+\subsection{Creating the system of equations}
+First, the force has to be distributed over the edge of the mesh. This is done using the function Distribute\textunderscore Force. Now the vector F can be made using the function getF. Subsequently stiffness matrix K can be constructed using the function getK. 
+\subsection{Solving the system}
+The system is solved using the function solveSys. This function first removes the parts with a prescribed displacement (constraint) from the left hand side and moves them to the right hand side. This modified stiffness matrix is now made into a sparse matrix to decrease the solving time. After this system is solved, the vector U of the displacements is reassembled and returned. 
+\subsection{Stresses}
+Finally the stresses in each element are calculated using the displacements of the nodes. This is done using the function get\textunderscore FEM\textunderscore stresses. This function uses single point Gaussian quadrature.
+
+\section{Validation}
+
+\subsection{Analytical solution}
+
+
+
+\end{document}
