@@ -5,7 +5,8 @@
 \label{AppA}
 \section{main.py}
 
-\begin{spverbatim}
+
+\begin{verbatim}
 ## @package main
 #  This file is used to run the script and call al functions
 
@@ -35,11 +36,11 @@ sig=get_FEM_stresses(mesh,U,parameter)
 
 plot_solution( mesh,'output', 'output',U,sig)
 
-\end{spverbatim}
+\end{verbatim}
 
 
 \section{MeshDat.py}
-\begin{spverbatim}
+\begin{verbatim}
 # -*- coding: utf-8 -*-
 ## @package MeshDat
 #  This file contains all objects
@@ -202,7 +203,8 @@ class Element:
     #  @return      Vector of integration point weights
     def get_integration_scheme ( self, name, npts ):
         xis, ws = self.__parent.get_integration_scheme( name, npts )
-        ws = numpy.array([w*numpy.linalg.det(self.__get_jacobian( xi )) for xi, w in zip(xis,ws)])
+        ws = numpy.array([w*numpy.linalg.det(self.__get_jacobian( xi )) for xi, 
+			w in zip(xis,ws)])
         return xis, ws
         
     ## Get the shape functions gradient
@@ -367,10 +369,10 @@ class StandardTriangle:
                            [ 1 , 2 ],
                            [ 2 , 0 ]])
 
-\end{spverbatim}
+\end{verbatim}
 
 \section{IOlib.py}
-\begin{spverbatim}
+\begin{verbatim}
 ## @package IOlib
 #  This file is used to read the mesh from a .msh file.
 # -*- coding: utf-8 -*-
@@ -442,7 +444,7 @@ def read_from_txt( fname ):
         RSnodes = []
         for ielem in range( nelems ):
             linelist    = fin.readline().strip().split()
-            elemID    = int(linelist[0])    # Possibly obsolete since all elements are grouped together by gmsh 
+            elemID    = int(linelist[0])    
             enodesIDs = numpy.array(linelist[5:],dtype=int)
             enodes    = [ nodes[nodeIDs.index(enodesID)] for enodesID in enodesIDs ]
             ElementType = int(linelist[1])
@@ -461,7 +463,8 @@ def read_from_txt( fname ):
                     node.set_forcecons(Force)
                     RSnodes.append( node.get_ID() )
         
-        LSnodes = list(set(LSnodes)) # Remove duplicates, contains node IDs with an arbitrary order
+        LSnodes = list(set(LSnodes)) 
+        # Remove duplicates, contains node IDs with an arbitrary order
         RSnodes = list(set(RSnodes))
         
         
@@ -473,10 +476,10 @@ def read_from_txt( fname ):
     return mesh
 
 
-\end{spverbatim}
+\end{verbatim}
 
 \section{classParameter.py}
-\begin{spverbatim}
+\begin{verbatim}
 ## @package class_parameter
 #  This file contains all material parameters
 
@@ -490,10 +493,10 @@ class Parameter:
         self.E=E
         self.nu=nu
 
-\end{spverbatim}
+\end{verbatim}
 
 \section{FEM.py}
-\begin{spverbatim}
+\begin{verbatim}
 ## @package FEM
 #  This module contains the functions used for the FEM.
 
@@ -584,10 +587,12 @@ def solveSys(mesh,F,K):
     #read constraints
     for node in nodes:
         if node.get_constraint().sum()>0:
-            cons[c,0:]=[node.get_index(), node.get_constraint()[0],node.get_constraint()[1]]
+            cons[c,0:]=[node.get_index(), node.get_constraint()[0],
+            	node.get_constraint()[1]]
             consDis[c,0:]=[node.get_index(), 0,0]
             c+=1
-    #limit F to f. The values at f where the position of u is prescribed or fixed are pulled out
+    #limit F to f. The values at f where the position of u is prescribed or 
+    	fixed are pulled out
     nnodes = mesh.get_nr_of_nodes()
     boundryLen=numpy.sum(cons[:,1:])
 
@@ -600,7 +605,8 @@ def solveSys(mesh,F,K):
             f[ci]=F[c]
             ci+=1
 
-    # remove the rows and columns where u is known (prescribed), put them in the righthand side
+    # remove the rows and columns where u is known (prescribed), 
+    	put them in the righthand side
     ci=0
     for c in range(2*nnodes):
         row = numpy.where(cons[:,0] == c//2)[0]
@@ -672,7 +678,8 @@ def getK(mesh,param):
             for nodej in element:
                 for i1 in [0,1]:
                     for i2 in [0,1]:
-                        K[2*nodei.get_index() +i1,2*nodej.get_index()+i2] += Ke[2*counti+i1,2*countj+i2]
+                        K[2*nodei.get_index() +i1,2*nodej.get_index()+i2] 
+                        	+= Ke[2*counti+i1,2*countj+i2]
                 countj += 1
             counti += 1
     #symmetry check
@@ -721,12 +728,13 @@ def get_shapes ( xi ):
     return numpy.array([1-xi[0]-xi[1],xi[0],xi[1]])
 
 
-\end{spverbatim}
+\end{verbatim}
 
 \section{output.py}
-\begin{spverbatim}
+\begin{verbatim}
 ## @package output
-#  This module contains the functions used for creating the output. The ouput is formatted in .VTK and can be opened with Paraview.
+#  This module contains the functions used for creating the output. 
+The ouput is formatted in .VTK and can be opened with Paraview.
 
 import numpy
 import os
@@ -751,7 +759,8 @@ def plot_solution( mesh, outfile, outfolder,U,sig):
     nodes_list=mesh.get_nodes()
     output.write('DATASET UNSTRUCTURED_GRID \nPOINTS '+str(nrNodes)+' float\n')
     for c in range(nrNodes):
-        output.write(' '.join(map(str,nodes_list[c].get_coordinate()+[U[2*c],U[2*c+1]])))
+        output.write(' '.join(map(str,nodes_list[c].get_coordinate()+[U[2*c],
+        	U[2*c+1]])))
         output.write(' 0.0\n')
 
 
@@ -774,7 +783,8 @@ def plot_solution( mesh, outfile, outfolder,U,sig):
 
 
     # Plot stresses in cells
-    output.write('\nCELL_DATA '+str(nrElements)+' \nSCALARS x-stress FLOAT \nLOOKUP_TABLE default\n')
+    output.write('\nCELL_DATA '+str(nrElements)+' \nSCALARS x-stress 
+    	FLOAT \nLOOKUP_TABLE default\n')
     for c in range(nrElements):
         #output.write(str(nodes_list[c].get_stress_n()))
         output.write(str(sig[c,0]))
@@ -793,7 +803,8 @@ def plot_solution( mesh, outfile, outfolder,U,sig):
         output.write('\n')
 
     #plot displacements in nodes
-    output.write('\nPOINT_DATA '+str(nrNodes)+' \nSCALARS x-displacement FLOAT \nLOOKUP_TABLE default\n')
+    output.write('\nPOINT_DATA '+str(nrNodes)+' \nSCALARS x-displacement FLOAT 
+    	\nLOOKUP_TABLE default\n')
 
     for c in range(nrNodes):
         #output.write(str(nodes_list[c].get_stress_n()))
@@ -826,9 +837,10 @@ def create_folder(path):
 #  @param st Vector containing the stress elements
 
 def vonMises(st):
-    stress = (1/0.70710678118)*numpy.sqrt((st[0]-st[1])**2+(st[1])**2+(st[0])**2+6*st[2])
+    stress = (1/0.70710678118)*numpy.sqrt((st[0]-st[1])**2+(st[1])**2+(st[0])
+    	**2+6*st[2])
     return str(stress)
-\end{spverbatim}
+\end{verbatim}
 
 
 \chapter{Gmsh}
