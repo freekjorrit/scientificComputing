@@ -1,7 +1,915 @@
+
 \begin{appendices}
 
-\chapter{Initial velocity}
+\chapter{FEM code}
 \label{AppA}
-\section{blabla}
+\section{main.py}
+
+\begin{spverbatim}
+## @package main
+#  This file is used to run the script and call al functions
+
+import numpy
+from FEM  import *
+from IOlib import *
+from MeshDat import *
+from output import *
+
+
+E=70e9
+nu=0.33
+
+parameter=Parameter(E, nu)
+
+mesh = read_from_txt('Mesh/MultiHole.msh')
+
+Force = -1e10
+
+dis_force = Distribute_Force(mesh,Force)
+
+K = getK(mesh,parameter)
+F = getF(mesh,dis_force)
+
+U = solveSys(mesh,F,K)
+sig=get_FEM_stresses(mesh,U,parameter)
+
+plot_solution( mesh,'output', 'output',U,sig)
+
+\end{spverbatim}
+
+
+\section{MeshDat.py}
+\begin{spverbatim}
+# -*- coding: utf-8 -*-
+## @package MeshDat
+#  This file contains all objects
+
+"""
+Created on Wed Apr 06 17:44:14 2016
+
+@author: Mark
+"""
+
+import numpy 
+
+## Add nodes to a list before creating the mesh.
+#  @param nlist  List of nodes
+#  @param ID     Node ID
+#  @param coord  Node coordinate
+def addNode( nlist, ID, coord ):
+    index = len(nlist)
+    NewNode = Node(ID, coord, index)
+    return nlist.append( NewNode )
+
+## Add elements to a list before creating the mesh.
+#  @param elist  List of elements
+#  @param ID     Element ID
+#  @param Enodes Element nodes
+def addElement( elist, ID, Enodes ):
+    NewElement = Element(ID, StandardTriangle(), Enodes)
+    return elist.append( NewElement )
+
+       
+#==============================================================================#
+## node object
+class Node:
+    
+    ## Constructor
+    #  @param ID    Node ID
+    #  @param coord Node coordinate
+    #  @param index Node index
+    def __init__ ( self, ID, coord, index ):
+        self.__ID = ID
+        self.__index = index
+        self.set_coordinate( coord )
+        self.set_constraint( numpy.array([0 , 0]) )
+
+    ## Get the Node ID
+    def get_ID ( self ):
+        return self.__ID
+    
+    ## Get the Node index    
+    def get_index( self ):
+        return self.__index
+    
+    ## Set the coordinate
+    #  @param coord Node coordinate   
+    def set_coordinate( self, coord ):
+        assert isinstance( coord, numpy.ndarray )
+        assert coord.ndim==1
+        assert coord.dtype==float
+        self.__coord = coord
+
+    ## Get the Node coordinate
+    def get_coordinate( self ):
+        return self.__coord
+        
+    ## String function
+    def __str__ ( self ):
+        s  = 'Node ID           : %d\n' % self.get_ID()
+        s += 'Node coordinates  : %s\n' % numpy.array_str(self.get_coordinate())
+        s += 'Node index        : %d\n' % self.get_index()
+        return s
+    
+    ## Set Constraint
+    # @param cons Set constraint for node
+    def set_constraint( self, cons ):
+        assert isinstance( cons, numpy.ndarray )
+        assert cons.ndim==1
+        assert cons.dtype==int
+        self.__cons = cons
+        
+    ## Get Constraint
+    def get_constraint( self ):
+        return self.__cons
+
+    ## Set Force Constraint
+    # @param consF set Force constraints
+    def set_forcecons( self, consF ):
+        assert isinstance( consF, numpy.ndarray )
+        assert consF.ndim==1
+        assert consF.dtype==float
+        self.__conF = consF
+
+    ## Get ForceConstraint
+    def get_forcecons( self ):
+        return self.__conF
+
+#==============================================================================
+## element object
+class Element:
+
+    ## Constructor
+    #  @param ID     Element ID
+    #  @param parent Standard/parent element
+    #  @param nodes  List of finite element Nodes
+    def __init__ ( self, ID, parent, nodes ):
+        self.__ID     = ID
+        self.__nodes  = nodes
+        self.__parent = parent
+        self.__nnodes = len(parent)
+        assert len(parent)==len(nodes)
+
+    ## Get element ID
+    def get_ID(self):
+        return self.__ID
+    
+    ## Get nodes
+    def get_nodes( self ):
+        return self.__nodes
+        
+    ## Get node IDs from element
+    def get_node_IDs( self ):
+        IDlist = []
+        for node in self.__nodes:
+            IDlist.append(node.get_ID())
+        return IDlist     
+            
+    ## Get the number of nodes
+    def get_nr_of_nodes ( self ):
+        return self.__nnodes
+        
+    ## Iterator function
+    def __iter__( self ):
+        return iter(self.__nodes)
+
+    ## Length function
+    def __len__( self ):
+        return self.get_nr_of_nodes()
+
+    ## String function
+    def __str__( self ):
+        s  = 'Element %d with nodes: ' % self.__ID
+        s += ', '.join(str(node) for node in self.__nodes)
+        return s
+        
+    ## Get item function
+    def __getitem__ ( self, index ):
+        return self.__nodes[index]
+        
+    ## Get the jacobian
+    #  @param  xi Local coordinate vector
+    #  @return    Jacobian matrix
+    def __get_jacobian ( self, xi ):
+        coords          = self.get_coordinates()
+        std_shapes_grad = self.__parent.get_shapes_gradient(xi)
+        return coords.T.dot( std_shapes_grad )
+        
+    ## Get the integration scheme
+    #  @param  name The type of integration scheme (e.g. 'gauss')
+    #  @param  npts The number of integration points
+    #  @return      Matrix of integration point coordinates
+    #  @return      Vector of integration point weights
+    def get_integration_scheme ( self, name, npts ):
+        xis, ws = self.__parent.get_integration_scheme( name, npts )
+        ws = numpy.array([w*numpy.linalg.det(self.__get_jacobian( xi )) for xi, w in zip(xis,ws)])
+        return xis, ws
+        
+    ## Get the shape functions gradient
+    #  @param  xi Local coordinate vector
+    #  @return    Matrix of shape function gradients
+    def get_shapes_gradient ( self, xi ):
+        J_inv = numpy.linalg.inv( self.__get_jacobian( xi ) )
+        std_shapes_grad = self.__parent.get_shapes_gradient(xi)
+        return std_shapes_grad.dot( J_inv )
+        
+    ## Get the matrix of nodal coordinates
+    def get_coordinates( self ):
+        return numpy.array([node.get_coordinate() for node in self])
+        
+    ## Get the global coordinate
+    #  @param  xi Local coordinate vector
+    #  @return    Global coordinate vector
+    def get_coordinate ( self, xi ):
+        coords     = self.get_coordinates()
+        std_shapes = self.__parent.get_shapes( xi )
+        return coords.T.dot( std_shapes )
+        
+#==============================================================================
+        
+## Finite element mesh
+class Mesh:
+    ## Constructor
+    #  @param nodes list of finite element nodes
+    #  @param elems list of finite elements
+    #  @param LSnodes list of boundary nodes on left side of geometry
+    #  @param RSnodes list of boundary nodes on right side of geometry
+    def __init__ ( self, nodes, elems, LSnodes, RSnodes ):
+       self.__nodes = nodes
+       self.__elems = elems
+       self.__LSnodes = LSnodes
+       self.__RSnodes = RSnodes
+              
+    ## Get a node
+    #  @param ID Node ID
+    def get_node ( self, ID ):
+        for node in self.__nodes:
+            if node.get_ID()==ID:
+                return node
+        raise RuntimeError( 'Node ID %d not found' % ID )
+        
+    ## Iterator function
+    def __iter__ ( self ):
+        return iter(self.__elems)
+
+    ## Length function
+    def __len__ ( self ):
+        return len(self.__elems)
+
+    ## String function
+    def __str__ ( self ):
+        s  = 'Number of nodes   : %d\n' % self.get_nr_of_nodes()
+        s += 'Number of elements: %d\n' % len(self)
+        return s
+        
+    ## Get the list of nodes in the mesh
+    def get_nodes( self ):
+        return self.__nodes
+        
+    ## Get the list of elements in the mesh
+    def get_elems( self ):
+        return self.__elems
+
+    ## Get the list of nodes on the left boundary of the mesh
+    def get_LSnodes( self ):
+        LSnodelist = []
+        for i in self.__LSnodes:
+            LSnodelist.append(self.get_node(i))
+        return LSnodelist
+        
+    ## Get the list of nodes on the right boundary of the mesh
+    def get_RSnodes( self ):
+        RSnodelist = []
+        for i in self.__RSnodes:
+            RSnodelist.append(self.get_node(i))
+        return RSnodelist
+
+    ## Get the number of nodes
+    def get_nr_of_nodes ( self ):
+        return len(self.__nodes)
+
+    ## Get the number of elements
+    def get_nr_of_elements ( self ):
+        return len(self.__elems)
+        
+    ## Get the number of boundary nodes
+    def get_nr_of_LSnodes ( self ):
+        return len(self.__LSnodes)
+        
+    ## Get the number of boundary nodes
+    def get_nr_of_RSnodes ( self ):
+        return len(self.__RSnodes)
+
+    ## Get the number of constrains
+    def get_nr_of_constraints( self ):
+        total = 0
+        for node in self.__nodes:
+            total += node.get_constraint().sum();
+        return total
+
+    ## Get the number of constrained nodes
+    def get_nr_of_nodes_with_constraints( self ):
+        total = 0
+        for node in self.__nodes:
+            if node.get_constraint().sum()>0:
+                total += 1
+        return total
+#==============================================================================
+    
+##  Linear triangle parent element with local coordinates (0,0), (1,0), (0,1)
+class StandardTriangle:
+    
+    ## Dictionary of integration schemes
+    #
+    #  See e.g. 'http://www.cs.rpi.edu/~flaherje/pdf/fea6.pdf' for details
+    __ischemes = {
+                   ('gauss',1 ) : ( numpy.array([[1./3.,1./3.]]),
+                                    numpy.array([.5]) )
+                 }
+
+    ## Number of nodes
+    __nnodes = 3
+
+    ## Length function
+    def __len__ ( self ):
+        return self.get_nr_of_nodes()
+
+    ## Get the number of nodes
+    def get_nr_of_nodes ( self ):
+        return self.__nnodes
+
+    ## Get the shape functions
+    #  @param  xi Local coordinate vector
+    #  @return    Vector of shape functions
+    def get_shapes ( self, xi ):
+        return numpy.array([1-xi[0]-xi[1],xi[0],xi[1]])
+
+    ## Get the shape functions gradient
+    #  @param  xi Local coordinate vector
+    #  @return    Matrix of shape function gradients
+    def get_shapes_gradient ( self, xi ):
+        return numpy.array([[-1.,-1.],
+                            [ 1., 0.],
+                            [ 0., 1.]])
+
+    ## Get the integration scheme
+    #  @param  name The type of integration scheme (e.g. 'gauss')
+    #  @param  npts The number of integration points
+    #  @return      Matrix of integration point coordinates
+    #  @return      Vector of integration point weights
+    def get_integration_scheme ( self, name, npts ):
+        xis, ws = self.__ischemes[ (name,npts) ]
+        return xis, ws
+
+    ## Get the element's internal connection scheme
+    def get_connections_scheme (self):
+        return numpy.array([[ 0 , 1 ],
+                           [ 1 , 2 ],
+                           [ 2 , 0 ]])
+
+\end{spverbatim}
+
+\section{IOlib.py}
+\begin{spverbatim}
+## @package IOlib
+#  This file is used to read the mesh from a .msh file.
+# -*- coding: utf-8 -*-
+
+"""
+Created on Tue Apr 05 17:53:24 2016
+
+@author: Mark
+"""
+
+import numpy 
+from MeshDat import *
+
+
+## Mesh file reader
+#
+#  @param  fname Name of the mesh file
+#  @return       Finite element mesh
+def read_from_txt( fname ):
+    try:
+
+        #Open the file to read
+        #fname = 'SingleHole_Circle.msh'
+        fin = open( fname )
+        
+        # this skips the $Physical names section
+        line     = fin.readline()
+        line     = fin.readline()
+        line     = fin.readline()
+        line     = fin.readline()
+        
+        # Read the number of PhysicalEntities
+        linelist = line.strip().split()
+        assert linelist[0] =='$PhysicalNames'
+        line     = fin.readline()
+        nPhysical = int(line)
+        for inode in range( nPhysical + 1 ):
+            line     = fin.readline()
+            
+        linelist = line.strip().split()
+        
+        #Read the number of nodes
+        line     = fin.readline()
+        linelist = line.strip().split()
+        assert linelist[0] =='$Nodes'
+        line     = fin.readline()
+        nnodes = int(line)
+        
+        nodes   = []
+        nodeIDs = []
+        for inode in range( nnodes ):
+            linelist = fin.readline().strip().split()
+            nodeID   = int(linelist[0])
+            coord    = numpy.array(linelist[1:3],dtype=float)
+            addNode(nodes, nodeID, coord)   
+            nodeIDs.append( nodeID )
+            
+        line     = fin.readline()
+        
+        #Read the number of elements
+        line     = fin.readline()
+        linelist = line.strip().split()
+        assert linelist[0] =='$Elements'
+        line     = fin.readline()
+        nelems   = int(line)
+        
+        elems = []  
+        LSnodes = []
+        RSnodes = []
+        for ielem in range( nelems ):
+            linelist    = fin.readline().strip().split()
+            elemID    = int(linelist[0])    # Possibly obsolete since all elements are grouped together by gmsh 
+            enodesIDs = numpy.array(linelist[5:],dtype=int)
+            enodes    = [ nodes[nodeIDs.index(enodesID)] for enodesID in enodesIDs ]
+            ElementType = int(linelist[1])
+            if ElementType == 2 :
+                addElement(elems, elemID, enodes)
+                
+            PhysicalGroup = int(linelist[3])    
+            if PhysicalGroup == 2 : # Left edge
+                Cons = numpy.array([1, 0])
+                for node in enodes:
+                    node.set_constraint(Cons)
+                    LSnodes.append( node.get_ID() )
+            elif PhysicalGroup == 3 : # Right edge
+                Force = numpy.array([10.0, 0.0])
+                for node in enodes:
+                    node.set_forcecons(Force)
+                    RSnodes.append( node.get_ID() )
+        
+        LSnodes = list(set(LSnodes)) # Remove duplicates, contains node IDs with an arbitrary order
+        RSnodes = list(set(RSnodes))
+        
+        
+        mesh = Mesh( nodes, elems, LSnodes, RSnodes )
+        mesh.get_node(1).set_constraint(numpy.array([1 ,1]))
+    except:
+        fin.close()
+
+    return mesh
+
+
+\end{spverbatim}
+
+\section{classParameter.py}
+\begin{spverbatim}
+## @package class_parameter
+#  This file contains all material parameters
+
+## Parameter object
+class Parameter:
+
+    ## Constructor
+    # @param E =                   Young's Modulus             [Pa]
+    # @param nu =                   Poisson Ratio               []
+    def __init__ ( self, E,nu):
+        self.E=E
+        self.nu=nu
+
+\end{spverbatim}
+
+\section{FEM.py}
+\begin{spverbatim}
+## @package FEM
+#  This module contains the functions used for the FEM.
+
+import numpy
+from MeshDat import *
+from classParameter import *
+import scipy.sparse.linalg
+
+## Distribute the Force over the nodes on the righthand side
+#
+#  @param  mesh This is a MeshDat.Mesh()
+#  @param  Force Force on the nodes on the righthand side
+#  @return       Distributed force on nodes
+def Distribute_Force(mesh,Force):
+    
+    nnodes = len(mesh.get_RSnodes())
+    c = 0
+    f = Force / (nnodes-1)
+    dis_force = numpy.zeros((nnodes,3))
+    
+    for node in mesh.get_RSnodes():
+        if c<2:
+        
+            dis_force[c] = numpy.array([node.get_index(),f/2,0])
+            
+        else:
+            
+            dis_force[c] = numpy.array([node.get_index(),f,0])
+        
+        c+=1
+        
+    return dis_force
+
+## Limit F to f where the entries of K in KU=F are known
+#
+#  @param  mesh This is a MeshDat.Mesh()
+#  @param  Force Distributed force on nodes
+#  @return       Limited F
+def getF(mesh,Force):
+    nnodes=mesh.get_nr_of_nodes()
+    ff = numpy.zeros( (nnodes,2) )
+    for iforce in range(len(Force)):
+        ff[(Force[iforce,0]),0] = Force[iforce,1]
+        ff[(Force[iforce,0]),1] = Force[iforce,2]
+    F =  numpy.zeros( (2*nnodes,1) )
+    for element in mesh:
+         fe = numpy.zeros( 2*len(element) )
+
+         node_ID = numpy.zeros(len(element))
+         count1 = 0
+         for node in element:
+             node_ID[count1] = node.get_index()
+             count1 += 1
+         count2 = 0
+         xis, ws = element.get_integration_scheme( 'gauss', 1 )
+         for xi, w in zip( xis, ws ):                    #get Ke for each element
+             N = get_shapes(xi)
+             N2d = numpy.zeros((2,2*len(element)))
+             for inode in range(0,len(element)):
+                 N2d[0,0+2*inode] = N[inode]
+                 N2d[1,1+2*inode] = N[inode]
+             fe += w * ff[(node_ID[count2],)].dot(N2d)
+             count2 += 1
+         count3 = 0
+         for node in element:
+
+            F[2*node.get_index()] += fe[2*count3]
+            F[2*node.get_index()+1] += fe[2*count3+1]
+            count3 += 1
+    for x in range(len(ff)):
+        F[2*x]=ff[x,0]
+        F[2*x+1]=ff[x,1]
+    return F
+
+## Rewrite K to Kn (rows with known U are removed) and solve the linear system
+#
+#  @param  mesh This is a MeshDat.Mesh()
+#  @param  F Limited Force Distribution
+#  @param  K Stiffness Matrix
+#  @return Displacement U
+def solveSys(mesh,F,K):
+    nr_of_nodes_w_cons = mesh.get_nr_of_nodes_with_constraints()
+    cons = numpy.zeros((nr_of_nodes_w_cons,3))
+    consDis = numpy.zeros((nr_of_nodes_w_cons,3))
+    nodes = mesh.get_nodes()
+    c=0
+
+    #read constraints
+    for node in nodes:
+        if node.get_constraint().sum()>0:
+            cons[c,0:]=[node.get_index(), node.get_constraint()[0],node.get_constraint()[1]]
+            consDis[c,0:]=[node.get_index(), 0,0]
+            c+=1
+    #limit F to f. The values at f where the position of u is prescribed or fixed are pulled out
+    nnodes = mesh.get_nr_of_nodes()
+    boundryLen=numpy.sum(cons[:,1:])
+
+    Kn=numpy.zeros((2*nnodes-boundryLen,2*nnodes-boundryLen))
+    f=numpy.zeros(2*nnodes-boundryLen)
+    ci=0
+    for c in range(2*nnodes):
+        row = numpy.where(cons[:,0] == c//2)[0]
+        if row.size == 0 or cons[row,c.__mod__(2)+1] == 0:
+            f[ci]=F[c]
+            ci+=1
+
+    # remove the rows and columns where u is known (prescribed), put them in the righthand side
+    ci=0
+    for c in range(2*nnodes):
+        row = numpy.where(cons[:,0] == c//2)[0]
+        if row.size == 0 or cons[row,c.__mod__(2)+1] == 0:
+            cci=0
+            for cc in range(2*nnodes):
+                row2= numpy.where(cons[:,0] == cc//2)[0]
+                if row2.size == 0 or cons[row2,cc.__mod__(2)+1] == 0:
+                    Kn[ci,cci]=K[c,cc]
+                    cci+=1
+            ci+=1
+        else:
+            cci=0
+            for cc in range (2*nnodes):
+                row2= numpy.where(cons[:,0] == cc//2)[0]
+                if row2.size == 0 or cons[row2,cc.__mod__(2)+1] == 0:
+                    f[cci]-=K[cc,c]*consDis[row,c.__mod__(2)+1]
+                    cci+=1
+
+    #solve and replace the known displacements
+    u=numpy.zeros(2*nnodes)
+
+    sKn = scipy.sparse.csr_matrix(Kn)    
+    
+    sx = scipy.sparse.linalg.spsolve(sKn,f)
+
+    # restore the full U, so add the prescribed displacements.
+    ci=0
+    for c in range(2*nnodes):
+        row = numpy.where(cons[:,0] == c//2)[0]
+        if row.size == 0 or cons[row,c.__mod__(2)+1] == 0:
+            u[c]=sx[c-ci]
+        if cons[row,c.__mod__(2)+1] == 1:
+            u[c]=consDis[row,c.__mod__(2)+1]
+            ci+=1
+    return u
+
+
+## Make stiffness matrix K from all separate Ke from the elements
+#
+#  @param  mesh This is a MeshDat.Mesh()
+#  @param  param This is a class_parameter.Parameter()
+#  @return Stifness K
+def getK(mesh,param):
+    C = param.E/((1-param.nu**2))*numpy.array([[1, param.nu, 0],
+                                     [param.nu, 1, 0],
+                                     [0, 0, (1-param.nu)/2]])
+    nnodes=mesh.get_nr_of_nodes()
+    K = numpy.zeros( (2*nnodes,)*2 )
+    for element in mesh:
+        Ke = numpy.zeros( (2*len(element),)*2 )
+        xi, w = element.get_integration_scheme( 'gauss', 1 )
+
+        #create Ke with the weight functions
+
+        GradN = element.get_shapes_gradient( xi )
+
+        GradN2d = numpy.zeros((3,2*len(element)))
+        for inode in range(0,len(element)):
+            GradN2d[0,0+2*inode] = GradN[inode,0]
+            GradN2d[1,1+2*inode] = GradN[inode,1]
+            GradN2d[2,0+2*inode] = GradN[inode,1]
+            GradN2d[2,1+2*inode] = GradN[inode,0]
+        Ke =  w * numpy.dot( numpy.dot( GradN2d.T, C ),GradN2d)
+        counti = 0
+        ## put the values of Ke in K at the node positions
+        for nodei in element:
+            countj = 0
+            for nodej in element:
+                for i1 in [0,1]:
+                    for i2 in [0,1]:
+                        K[2*nodei.get_index() +i1,2*nodej.get_index()+i2] += Ke[2*counti+i1,2*countj+i2]
+                countj += 1
+            counti += 1
+    #symmetry check
+    if ((K.round(3) != K.round(3).T).all()):
+        print 'K is unsymmetric'
+    return K
+
+
+
+## returns a array of stresses in all elements in [xx yy xy]
+#
+#  @param  mesh This is a MeshDat.Mesh()
+#  @param  U Displacement of nodes
+#  @param  param This is a class_parameter.Parameter()
+#  @return Stiffness K
+def get_FEM_stresses(mesh,U,param):
+    C = param.E/((1-param.nu**2))*numpy.array([[1, param.nu, 0],
+                                     [param.nu, 1, 0],
+                                     [0, 0, (1-param.nu)/2]])
+    siglist = numpy.zeros((mesh.get_nr_of_elements(),3))
+    elec=0
+    for element in mesh:
+        xi, w = element.get_integration_scheme( 'gauss', 1 )
+        sig = 0
+        q=numpy.zeros((6,1))
+        qi=0
+        for node in element:
+            id=node.get_index()
+            q[2*qi]=U[2*id]
+            q[2*qi+1]=U[2*id+1]
+            qi+=1
+
+        GradN = element.get_shapes_gradient( xi )
+        GradN2d = numpy.zeros((3,2*len(element)))
+        for inode in range(0,len(element)):
+            GradN2d[0,0+2*inode] = GradN[inode,0]
+            GradN2d[1,1+2*inode] = GradN[inode,1]
+            GradN2d[2,0+2*inode] = GradN[inode,1]
+            GradN2d[2,1+2*inode] = GradN[inode,0]
+        sig = w * numpy.dot( numpy.dot( C , GradN2d),q)
+        siglist[elec,:]=sig.T
+        elec+=1
+    return siglist
+
+def get_shapes ( xi ):
+    return numpy.array([1-xi[0]-xi[1],xi[0],xi[1]])
+
+
+\end{spverbatim}
+
+\section{output.py}
+\begin{spverbatim}
+## @package output
+#  This module contains the functions used for creating the output. The ouput is formatted in .VTK and can be opened with Paraview.
+
+import numpy
+import os
+## plot_solution.
+#  Plots the nodes, elements, stresses and displacements of the mesh
+#  @param mesh This is a MeshDat.Mesh()
+#  @param outfile Name of the outputfile
+#  @param outfolder Location of the outputfile
+#  @param U In U the displacements of the nodes are stated
+#  @param sig In sig the stresses for all nodes are listed
+
+def plot_solution( mesh, outfile, outfolder,U,sig):
+
+    create_folder(outfolder)
+
+    # Opening Tags
+    output = open(outfolder+'/post_proc_'+str(outfile).zfill(3)+'.vtk','w+')
+    output.write('# vtk DataFile Version 2.0 \nDiscrete Dislocations \nASCII \n\n')
+
+    # Plot Nodes
+    nrNodes=mesh.get_nr_of_nodes()
+    nodes_list=mesh.get_nodes()
+    output.write('DATASET UNSTRUCTURED_GRID \nPOINTS '+str(nrNodes)+' float\n')
+    for c in range(nrNodes):
+        output.write(' '.join(map(str,nodes_list[c].get_coordinate()+[U[2*c],U[2*c+1]])))
+        output.write(' 0.0\n')
+
+
+
+    # Plot Elements
+    nrElements=mesh.get_nr_of_elements()
+    output.write('\nCELLS '+str(nrElements)+' '+str(nrElements*4)+'\n')
+    for ele in mesh:
+        elenodes=[]
+        for node in ele:
+            elenodes.append(node.get_index())
+        output.write('3 ')
+        output.write(' '.join(map(str,elenodes)))
+        output.write('\n')
+
+    # output Celltypes (every cell is a triangular element)
+    output.write('\nCELL_TYPES '+str(nrElements)+'\n')
+    for ele in mesh:
+        output.write('5\n')
+
+
+    # Plot stresses in cells
+    output.write('\nCELL_DATA '+str(nrElements)+' \nSCALARS x-stress FLOAT \nLOOKUP_TABLE default\n')
+    for c in range(nrElements):
+        #output.write(str(nodes_list[c].get_stress_n()))
+        output.write(str(sig[c,0]))
+        output.write('\n')
+
+    output.write(' \nSCALARS y-stress FLOAT \nLOOKUP_TABLE default\n')
+    for c in range(nrElements):
+        #output.write(str(nodes_list[c].get_stress_n()))
+        output.write(str(sig[c,1]))
+        output.write('\n')
+
+    output.write(' \nSCALARS Mises-stress FLOAT \nLOOKUP_TABLE default\n')
+    for c in range(nrElements):
+        #output.write(str(nodes_list[c].get_stress_n()))
+        output.write(vonMises(sig[c,:]))
+        output.write('\n')
+
+    #plot displacements in nodes
+    output.write('\nPOINT_DATA '+str(nrNodes)+' \nSCALARS x-displacement FLOAT \nLOOKUP_TABLE default\n')
+
+    for c in range(nrNodes):
+        #output.write(str(nodes_list[c].get_stress_n()))
+        output.write(str(U[2*c]))
+        output.write('\n')
+
+    output.write(' \nSCALARS y-displacement FLOAT \nLOOKUP_TABLE default\n')
+
+    for c in range(nrNodes):
+        #output.write(str(nodes_list[c].get_stress_n()))
+        output.write(str(U[2*c+1]))
+        output.write('\n')
+
+    output.close()
+    print 'File written to '+outfolder+'/post_proc_'+str(outfile).zfill(3)+'.vtk'
+
+## create_folder
+#  Creates output Folder if it does not exist already
+# @param path defines the output path.
+
+def create_folder(path):
+    try:
+        os.makedirs(path)
+    except OSError:
+        if not os.path.isdir(path):
+            raise
+
+## vonMises
+#  Calculates the Von Mises stress on elements
+#  @param st Vector containing the stress elements
+
+def vonMises(st):
+    stress = (1/0.70710678118)*numpy.sqrt((st[0]-st[1])**2+(st[1])**2+(st[0])**2+6*st[2])
+    return str(stress)
+\end{spverbatim}
+
+
+\chapter{Gmsh}
+\section{Geometry}
+\begin{verbatim}
+// Inputs
+boxdim = 10;
+gridsize = boxdim/30;
+Z = 0; 
+
+// Points
+Point(1) = {0,0,Z,gridsize};
+Point(2) = {boxdim,0,Z,gridsize};
+Point(3) = {boxdim,boxdim,Z,gridsize};
+Point(4) = {0,boxdim,Z,gridsize};
+
+// Circles
+C1x = 0.3*boxdim;
+C1y = 0.3*boxdim;
+R1 = 0.1*boxdim;
+Point(5) = {C1x, C1y, 0, gridsize};
+Point(6) = {C1x + R1, C1y, 0, gridsize};
+Point(7) = {C1x - R1, C1y, 0, gridsize};
+
+C2x = 0.3*boxdim;
+C2y = 0.7*boxdim;
+R2 = R1;
+Point(8) = {C2x, C2y, 0, gridsize};
+Point(9) = {C2x + R2, C2y, 0, gridsize};
+Point(10) = {C2x - R2, C2y, 0, gridsize};
+
+C3x = 0.7*boxdim;
+C3y = 0.3*boxdim;
+R3 = R1;
+Point(11) = {C3x, C3y, 0, gridsize};
+Point(12) = {C3x + R3, C3y, 0, gridsize};
+Point(13) = {C3x - R3, C3y, 0, gridsize};
+
+C4x = 0.7*boxdim;
+C4y = 0.7*boxdim;
+R4 = R1;
+Point(14) = {C4x, C4y, 0, gridsize};
+Point(15) = {C4x + R4, C4y, 0, gridsize};
+Point(16) = {C4x - R4, C4y, 0, gridsize};
+
+// Lines
+Line(1) = {1, 2};
+Line(2) = {2, 3};
+Line(3) = {3, 4};
+Line(4) = {4, 1};
+
+Circle(5) = {6, 5, 7};
+Circle(6) = {7, 5, 6};
+
+Circle(7) = {9, 8, 10};
+Circle(8) = {10, 8, 9};
+
+Circle(9) = {13, 11, 12};
+Line(10) = {12, 15};
+Circle(11) = {15, 14, 16};
+Line(12) = {16, 13};
+
+// Line Loop
+Line Loop(1) = {3, 4, 1, 2};
+Line Loop(2) = {5, 6};
+Line Loop(3) = {7, 8};
+Line Loop(4) = {9, 10, 11, 12}; 
+
+// Surface
+Plane Surface(1) = {1};
+Plane Surface(2) = {4,3,2,1};
+
+// Create physical entities
+Physical Surface("Surface") 	= {2};
+Physical Line("Left Side") 		= {4};
+Physical Line("Right Side") 	= {2};
+Physical Line("Top and Bottom") = {3, 1};
+Physical Line("Circle1")		= {5, 6};
+Physical Line("Circle2")		= {7, 8};
+Physical Line("Hole")			= {9, 10, 11, 12}; 
+
+\end{verbatim}
 
 \end{appendices}
