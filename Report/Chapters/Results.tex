@@ -22,7 +22,7 @@ As mentioned before the generation of the mesh is done using a separate program 
 %\end{figure}
 
 \section{FEM}
-The resulting mesh is saved in a .msh file which is read by the FEM code. The code then does all the required calculations and the results are exported to paraview. The resulting images are shown below. Figure \ref{Disp} shows the displacement data. 
+The resulting mesh is saved in a .msh file which is read by the FEM code. The code then does all the required calculations as described previously and the results are exported to Paraview. The resulting images are shown below. Figure \ref{Disp} shows the displacement data and figure \ref{VonMises} shows the Von Mises stress. In figure \ref{VonMises2} the force is increased to show the displacements in the material. Linear material behavior is assumed.
 
  \begin{figure}[H]
  	\begin{center}
@@ -33,12 +33,18 @@ The resulting mesh is saved in a .msh file which is read by the FEM code. The co
 	\end{center}
 \end{figure}
 
-And figure \ref{VonMises} shows the Von Mises stress.
-
 \begin{figure}[H]
     \begin{center}
-    \includegraphics[scale=0.6]{IMG/smile_mises.png}
+    \includegraphics[scale=0.5]{IMG/smile_mises.png}
     \caption{Von Mises stress}
     \label{VonMises}
     \end{center}
 \end{figure}
+\begin{figure}[H]
+    \begin{center}
+    \includegraphics[scale=0.5]{IMG/smile_mises2.png}
+    \caption{Von Mises stress with high force}
+    \label{VonMises2}
+    \end{center}
+\end{figure}
+In figure \ref{VonMises} the stresses are high at the sides of the large hole. To get more detailed information the mesh should be refined in this areas. This is however outside the scope of this assignment. Mesh refinement was however already done in the previous assignment.
