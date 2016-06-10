@@ -13,7 +13,7 @@ nu=0.33
 
 parameter=Parameter(E, nu)
 
-mesh = read_from_txt('../Mesh/MultiHole.msh')
+mesh = read_from_txt('Mesh/MultiHole.msh')
 
 Force = -1e10
 
