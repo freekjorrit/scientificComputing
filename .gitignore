@@ -2,9 +2,9 @@
 *.pyc
 post_proc_output.vtk
 Doxyfile
-FEM/doc/*
 *.toc
 Report/report.synctex.gz
 *.log
 Report/report.aux
 Report.pdf
+FEM/doc/*
