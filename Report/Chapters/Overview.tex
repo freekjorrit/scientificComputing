@@ -10,7 +10,7 @@ In main.py it is possible to adjust the material properties (Young's modulus and
 \subsection{Creating the system of equations}
 First, the force has to be distributed over the edge of the mesh. This is done using the function Distribute\textunderscore Force. Now the vector $F$ can be made using the function getF. Subsequently stiffness matrix $\mathbf{K}$ can be constructed using the function getK. 
 
-The matrix $\mathbf{K}$ is build from multiple $\mathbf{K_e}$. For every element a $\mathbf{K_e}$ is made and added to $\mathbf{K}$ at the places according to the node index. $\mathbf{K_e}$ is calculated as follows:
+The matrix $\mathbf{K}$ is built from multiple $\mathbf{K_e}$. For every element a $\mathbf{K_e}$ is made and added to $\mathbf{K}$ at the places according to the node index. $\mathbf{K_e}$ is calculated as follows:
 \begin{equation}
 \mathbf{K_e} = \int_\Omega \mathbf{B}^T \mathbf{C} \mathbf{B} \ d\omega
 \end{equation}
