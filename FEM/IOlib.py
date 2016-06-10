@@ -1,6 +1,7 @@
-# -*- coding: utf-8 -*-
 ## @package IOlib
 #  This file is used to read the mesh from a .msh file.
+# -*- coding: utf-8 -*-
+
 """
 Created on Tue Apr 05 17:53:24 2016
 
@@ -19,7 +20,7 @@ def read_from_txt( fname ):
     try:
 
         #Open the file to read
-#fname = 'SingleHole_Circle.msh'
+        #fname = 'SingleHole_Circle.msh'
         fin = open( fname )
         
         # this skips the $Physical names section

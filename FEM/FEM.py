@@ -3,7 +3,7 @@
 
 import numpy
 from MeshDat import *
-from class_parameter import *
+from classParameter import *
 import scipy.sparse.linalg
 
 ## Distribute the Force over the nodes on the righthand side

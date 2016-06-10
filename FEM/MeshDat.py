@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-## @package meshdat
+## @package MeshDat
 #  This file contains all objects
 
 """

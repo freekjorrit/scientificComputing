@@ -9,7 +9,7 @@ import os
 #  @param outfile Name of the outputfile
 #  @param outfolder Location of the outputfile
 #  @param U In U the displacements of the nodes are stated
-#  @sig In sig the stresses for all nodes are listed
+#  @param sig In sig the stresses for all nodes are listed
 
 def plot_solution( mesh, outfile, outfolder,U,sig):
 
